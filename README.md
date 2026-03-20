@@ -34,7 +34,7 @@ Ce projet met en œuvre une chaîne complète d'analyse de sentiments sur des tw
 ### Option A : avec `uv` (recommandé)
 
 ```bash
-cd d:\L3\MATH_511\mini_projet
+cd ./emotion_classification
 uv venv .venv
 .\.venv\Scripts\activate
 uv pip install -r requirements.txt
