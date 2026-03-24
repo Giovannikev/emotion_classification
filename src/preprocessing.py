@@ -28,4 +28,7 @@ def add_text_length_features(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
     df["text_length"] = df["text"].astype(str).str.len()
     df["word_count"] = df["text"].astype(str).str.split().str.len()
+    df["hashtag_count"] = df["text"].astype(str).str.count(HASHTAG_PATTERN)
+    df["mention_count"] = df["text"].astype(str).str.count(MENTION_PATTERN)
+    df["has_link"] = df["text"].astype(str).str.contains(URL_PATTERN)
     return df

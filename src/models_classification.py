@@ -3,7 +3,7 @@ from typing import Dict, Tuple
 import numpy as np
 from sklearn.base import ClassifierMixin
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
+from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.pipeline import Pipeline
@@ -31,16 +31,8 @@ def build_decision_tree_classifier() -> ClassifierMixin:
     )
 
 
-def evaluate_classifier(
-    pipeline: Pipeline, X_test: np.ndarray, y_test: np.ndarray
-) -> Dict[str, float]:
-    y_pred = pipeline.predict(X_test)
-    metrics = {
-        "accuracy": float(accuracy_score(y_test, y_pred)),
-        "precision_macro": float(precision_score(y_test, y_pred, average="macro")),
-        "recall_macro": float(recall_score(y_test, y_pred, average="macro")),
-        "f1_macro": float(f1_score(y_test, y_pred, average="macro")),
-    }
+def evaluate_classifier(y_true: np.ndarray, y_pred: np.ndarray) -> Dict[str, float]:
+    metrics = {"accuracy": float(accuracy_score(y_true, y_pred))}
     return metrics
 
 
@@ -50,7 +42,7 @@ def train_and_evaluate_model(
     model_name: str,
     test_size: float = 0.2,
     random_state: int = 42,
-) -> Tuple[Pipeline, Dict[str, float]]:
+) -> Tuple[Pipeline, Dict[str, float], np.ndarray, np.ndarray]:
     X_train, X_test, y_train, y_test = train_test_split(
         texts,
         labels,
@@ -72,5 +64,6 @@ def train_and_evaluate_model(
         ]
     )
     pipeline.fit(X_train, y_train)
-    metrics = evaluate_classifier(pipeline, X_test, y_test)
-    return pipeline, metrics
+    y_pred = pipeline.predict(X_test)
+    metrics = evaluate_classifier(y_test, y_pred)
+    return pipeline, metrics, y_test, y_pred

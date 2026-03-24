@@ -1,8 +1,10 @@
-from typing import Dict
+from typing import Dict, List, Optional
 
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
+import numpy as np
+from sklearn.feature_extraction.text import CountVectorizer
 
 
 def compute_basic_statistics(df: pd.DataFrame) -> Dict[str, float]:
@@ -40,7 +42,12 @@ def plot_text_length_distribution(df: pd.DataFrame, output_path: str) -> None:
 
 
 def plot_scatter_by_cluster(
-    components: pd.DataFrame, clusters: pd.Series, output_path: str
+    components: pd.DataFrame,
+    clusters: pd.Series,
+    output_path: str,
+    centroids: Optional[pd.DataFrame] = None,
+    var1: Optional[float] = None,
+    var2: Optional[float] = None,
 ) -> None:
     plt.figure(figsize=(7, 6))
     plot_df = components.copy()
@@ -54,36 +61,79 @@ def plot_scatter_by_cluster(
         s=12,
         linewidth=0,
         alpha=0.6,
-        legend=False,
+        legend=True,
     )
-    plt.title("SVD components colored by cluster")
-    plt.xlabel("Component 1")
-    plt.ylabel("Component 2")
+    if centroids is not None:
+        plt.scatter(
+            centroids["component_1"],
+            centroids["component_2"],
+            c="black",
+            s=80,
+            marker="X",
+            label="centroïdes",
+            linewidths=0.5,
+        )
+    if var1 is not None and var2 is not None:
+        xlab = f"Composante 1 (ACP, {var1*100:.1f}% var.)"
+        ylab = f"Composante 2 (ACP, {var2*100:.1f}% var.)"
+    else:
+        xlab = "Component 1"
+        ylab = "Component 2"
+    plt.title("ACP: composantes colorées par cluster")
+    plt.xlabel(xlab)
+    plt.ylabel(ylab)
+    handles, labels = plt.gca().get_legend_handles_labels()
+    plt.legend(
+        handles,
+        labels,
+        loc="center left",
+        bbox_to_anchor=(1, 0.5),
+        frameon=False,
+        title="Cluster",
+    )
     plt.tight_layout()
     plt.savefig(output_path, dpi=150)
     plt.close()
 
 
-def plot_scatter_by_sentiment(
-    components: pd.DataFrame, targets: pd.Series, output_path: str
-) -> None:
-    plt.figure(figsize=(7, 6))
-    plot_df = components.copy()
-    plot_df["target"] = targets.values
-    sns.scatterplot(
-        data=plot_df,
-        x="component_1",
-        y="component_2",
-        hue="target",
-        palette="Set1",
-        s=12,
-        linewidth=0,
-        alpha=0.6,
-        legend=False,
+def compute_top_words(texts: List[str], top_n: int = 20) -> pd.DataFrame:
+    vectorizer = CountVectorizer(stop_words="english", ngram_range=(1, 1))
+    X = vectorizer.fit_transform(texts)
+    words = np.array(vectorizer.get_feature_names_out())
+    counts = np.asarray(X.sum(axis=0)).ravel()
+    idx = np.argsort(counts)[::-1][:top_n]
+    return pd.DataFrame({"word": words[idx], "count": counts[idx]})
+
+
+def plot_top_words(top_words: pd.DataFrame, output_path: str, title: str) -> None:
+    plt.figure(figsize=(8, 6))
+    plot_df = top_words.sort_values("count", ascending=True)
+    sns.barplot(data=plot_df, x="count", y="word", color="#4C72B0")
+    plt.title(title)
+    plt.xlabel("Count")
+    plt.ylabel("Word")
+    plt.tight_layout()
+    plt.savefig(output_path, dpi=150)
+    plt.close()
+
+
+def plot_confusion_matrix(cm: np.ndarray, output_path: str, class_names: List[str]) -> None:
+    plt.figure(figsize=(6, 5))
+    sns.heatmap(
+        cm,
+        annot=True,
+        fmt="d",
+        cmap="Blues",
+        xticklabels=class_names,
+        yticklabels=class_names,
+        cbar=False,
+        linewidths=0.5,
+        linecolor="white",
+        square=True,
     )
-    plt.title("SVD components colored by sentiment")
-    plt.xlabel("Component 1")
-    plt.ylabel("Component 2")
+    plt.xlabel("Predicted")
+    plt.ylabel("True")
+    plt.title("Confusion Matrix")
     plt.tight_layout()
     plt.savefig(output_path, dpi=150)
     plt.close()
