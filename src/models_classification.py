@@ -8,6 +8,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.pipeline import Pipeline
 from sklearn.tree import DecisionTreeClassifier
+from sklearn.svm import LinearSVC
 
 
 def build_vectorizer() -> TfidfVectorizer:
@@ -29,6 +30,10 @@ def build_decision_tree_classifier() -> ClassifierMixin:
         min_samples_leaf=5,
         criterion="gini",
     )
+
+
+def build_svm_classifier() -> ClassifierMixin:
+    return LinearSVC(C=1.0, max_iter=2000)
 
 
 def evaluate_classifier(y_true: np.ndarray, y_pred: np.ndarray) -> Dict[str, float]:
@@ -55,6 +60,8 @@ def train_and_evaluate_model(
         classifier = build_knn_classifier()
     elif model_name == "decision_tree":
         classifier = build_decision_tree_classifier()
+    elif model_name == "svm":
+        classifier = build_svm_classifier()
     else:
         raise ValueError(f"Unknown model_name: {model_name}")
     pipeline: Pipeline = Pipeline(

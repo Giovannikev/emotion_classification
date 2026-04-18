@@ -9,17 +9,18 @@ Ce projet met en œuvre une chaîne complète d'analyse de sentiments sur des tw
 - Transformer le texte (nettoyage, TF‑IDF, n‑grammes).
 - Réduire la dimension (TruncatedSVD).
 - Regrouper (k‑means) et interpréter les clusters.
-- Classifier (k‑NN et arbre de décision) et évaluer les performances.
+- Classifier (k‑NN, arbre de décision et SVM linéaire) et évaluer les performances.
 
 ## Structure du projet
 
 - `data/` : données d’entrée
+- `src/` : code source (architecture modulaire)
   - `tweets.csv` (Sentiment140, 6 colonnes : target, ids, date, flag, user, text)
 - `src/` : code source (architecture modulaire)
   - [data_loading.py](file:///d:/L3/MATH_511/mini_projet/src/data_loading.py) : chargement du dataset
   - [preprocessing.py](file:///d:/L3/MATH_511/mini_projet/src/preprocessing.py) : nettoyage du texte, variables dérivées
   - [exploration.py](file:///d:/L3/MATH_511/mini_projet/src/exploration.py) : statistiques et visualisations EDA
-  - [models_classification.py](file:///d:/L3/MATH_511/mini_projet/src/models_classification.py) : pipelines TF‑IDF + k‑NN / arbre
+  - [models_classification.py](file:///d:/L3/MATH_511/mini_projet/src/models_classification.py) : pipelines TF‑IDF + k‑NN / arbre / SVM
   - [models_clustering.py](file:///d:/L3/MATH_511/mini_projet/src/models_clustering.py) : pipeline TF‑IDF + SVD + k‑means
   - [main.py](file:///d:/L3/MATH_511/mini_projet/src/main.py) : orchestration (génère tous les livrables)
 - `outputs/` : résultats (généré à l’exécution)
@@ -78,13 +79,21 @@ Par défaut, `src/main.py` échantillonne jusqu’à 50 000 tweets pour la cla
 - Classification
   - `outputs/classification_metrics_knn.csv`
   - `outputs/classification_metrics_decision_tree.csv`
+  - `outputs/classification_metrics_svm.csv`
+  - `outputs/classification_metrics_comparison.csv` (accuracy par modèle)
+  - `outputs/confusion_matrix_knn.csv`, `outputs/confusion_matrix_decision_tree.csv`, `outputs/confusion_matrix_svm.csv`
+  - `outputs/figures/confusion_matrix_knn.png`, `outputs/figures/confusion_matrix_decision_tree.png`, `outputs/figures/confusion_matrix_svm.png`
+  - `outputs/figures/classification_accuracy_comparison.png`
 
 ## Choix de modélisation (résumé)
+
+- Choix de modélisation (résumé)
 
 - Représentation : `TfidfVectorizer(max_features=20000, ngram_range=(1,2), stop_words="english")`.
 - Classification :
   - k‑NN (`n_neighbors=7`).
   - Arbre de décision (profondeur max 30, feuilles min 5) pour limiter l’overfitting.
+  - SVM linéaire (`LinearSVC(C=1.0, max_iter=2000)`).
 - Clustering :
   - `TruncatedSVD(n_components=100)` sur TF‑IDF, puis `KMeans(n_clusters=10, n_init=10)`.
 
@@ -92,7 +101,7 @@ Ces paramètres sont un bon point de départ et peuvent être ajustés selon les
 
 ## Interprétation des résultats
 
-- Comparez les métriques de classification (accuracy, precision_macro, recall_macro, f1_macro) entre k‑NN et arbre pour discuter des compromis.
+- Comparez les accuracies des modèles dans `outputs/classification_metrics_comparison.csv` et discutez des compromis entre k‑NN, arbre de décision et SVM.
 - Utilisez `clustering_results.csv` avec les figures SVD pour :
   - Visualiser la séparation spatiale des clusters.
   - Vérifier la cohérence grossière avec les sentiments (via ARI / la coloration par cible).

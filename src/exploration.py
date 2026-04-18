@@ -137,3 +137,19 @@ def plot_confusion_matrix(cm: np.ndarray, output_path: str, class_names: List[st
     plt.tight_layout()
     plt.savefig(output_path, dpi=150)
     plt.close()
+
+
+def plot_model_accuracy_comparison(
+    metrics_df: pd.DataFrame,
+    output_path: str,
+) -> None:
+    plt.figure(figsize=(6, 4))
+    plot_df = metrics_df.copy()
+    sns.barplot(data=plot_df, x="model", y="accuracy", palette="Set2")
+    plt.ylim(0, 1)
+    plt.xlabel("Modèle")
+    plt.ylabel("Accuracy")
+    plt.title("Comparaison des accuracies des modèles")
+    plt.tight_layout()
+    plt.savefig(output_path, dpi=150)
+    plt.close()

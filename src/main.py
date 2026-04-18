@@ -15,6 +15,7 @@ from src.exploration import (
     compute_top_words,
     plot_top_words,
     plot_confusion_matrix,
+    plot_model_accuracy_comparison,
 )
 from src.models_classification import train_and_evaluate_model
 from src.models_clustering import fit_clustering_model
@@ -45,9 +46,9 @@ def run_exploratory_analysis(df: pd.DataFrame) -> None:
 
 def run_classification(
     df: pd.DataFrame,
-    model_name: Literal["knn", "decision_tree"],
+    model_name: Literal["knn", "decision_tree", "svm"],
     n_rows: int | None = 50000,
-) -> None:
+) -> dict:
     if n_rows is not None:
         df = df.sample(n=n_rows, random_state=42)
     cleaned_texts = clean_text_series(df["text"].astype(str).to_numpy())
@@ -78,6 +79,7 @@ def run_classification(
         str(figures_dir / f"confusion_matrix_{model_name}.png"),
         ["negatif (0)", "positif (4)"],
     )
+    return metrics
 
 
 def run_clustering(
@@ -141,8 +143,22 @@ def main() -> None:
     df = load_raw_tweets()
     df = add_text_length_features(df)
     run_exploratory_analysis(df)
-    run_classification(df, model_name="knn")
-    run_classification(df, model_name="decision_tree")
+    knn_metrics = run_classification(df, model_name="knn")
+    dt_metrics = run_classification(df, model_name="decision_tree")
+    svm_metrics = run_classification(df, model_name="svm")
+    comparison_df = pd.DataFrame(
+        [
+            {"model": "knn", "accuracy": knn_metrics.get("accuracy")},
+            {"model": "decision_tree", "accuracy": dt_metrics.get("accuracy")},
+            {"model": "svm", "accuracy": svm_metrics.get("accuracy")},
+        ]
+    )
+    comparison_path = PROJECT_ROOT / "outputs" / "classification_metrics_comparison.csv"
+    comparison_df.to_csv(comparison_path, index=False)
+    figures_dir = PROJECT_ROOT / "outputs" / "figures"
+    figures_dir.mkdir(parents=True, exist_ok=True)
+    comparison_fig_path = figures_dir / "classification_accuracy_comparison.png"
+    plot_model_accuracy_comparison(comparison_df, str(comparison_fig_path))
     run_clustering(df)
 
 
